@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import apiClient from "../services/api";
 import Loading from "../Component/Loading";
+import logoBv from "../Asset/Images/Logobv.png";
 
 const ProtectedRoute = () => {
   const [isAuth, setIsAuth] = useState<boolean | null>(null);
   const [userName, setUserName] = useState<string>("User");
-  
+
   // State lưu danh sách Menu từ API và mảng các URL được phép truy cập
   const [menuData, setMenuData] = useState<any[]>([]);
   const [allowedUrls, setAllowedUrls] = useState<string[]>([]);
@@ -23,31 +24,31 @@ const ProtectedRoute = () => {
         setUserName(resUser.data.username || "Admin");
 
         const resMenu = await apiClient.get("/api/Authorization");
-        
+
         if (resMenu.data && resMenu.data.success) {
-            let fetchedMenus = resMenu.data.data;
+          let fetchedMenus = resMenu.data.data;
 
-            // Sắp xếp danh mục cha (Category) theo order_ct từ thấp đến cao
-            fetchedMenus.sort((a: any, b: any) => a.order_ct - b.order_ct);
+          // Sắp xếp danh mục cha (Category) theo order_ct từ thấp đến cao
+          fetchedMenus.sort((a: any, b: any) => a.order_ct - b.order_ct);
 
-            // Sắp xếp các menu con bên trong theo order_menu từ thấp đến cao
-            fetchedMenus.forEach((category: any) => {
-              if (category.menus && Array.isArray(category.menus)) {
-                category.menus.sort((a: any, b: any) => a.order_menu - b.order_menu);
+          // Sắp xếp các menu con bên trong theo order_menu từ thấp đến cao
+          fetchedMenus.forEach((category: any) => {
+            if (category.menus && Array.isArray(category.menus)) {
+              category.menus.sort((a: any, b: any) => a.order_menu - b.order_menu);
+            }
+          });
+
+          setMenuData(fetchedMenus);
+
+          let urls = ["/trang-chu"];
+          fetchedMenus.forEach((category: any) => {
+            category.menus.forEach((menu: any) => {
+              if (menu.url && menu.url !== "/#" && menu.url !== "#") {
+                urls.push(menu.url);
               }
             });
-
-            setMenuData(fetchedMenus);
-
-            let urls = ["/trang-chu"];
-            fetchedMenus.forEach((category: any) => {
-              category.menus.forEach((menu: any) => {
-                if (menu.url && menu.url !== "/#" && menu.url !== "#") {
-                    urls.push(menu.url);
-                }
-              });
-            });
-            setAllowedUrls(urls);
+          });
+          setAllowedUrls(urls);
         }
 
         setIsAuth(true);
@@ -71,7 +72,7 @@ const ProtectedRoute = () => {
   const toggleCategory = (index: number) => {
     setExpandedCategories(prev => ({
       ...prev,
-      [index]: !prev[index] 
+      [index]: !prev[index]
     }));
   };
 
@@ -84,39 +85,38 @@ const ProtectedRoute = () => {
 
   // --- THAY ĐỔI MÀU CHỮ Ở ĐÂY ---
   // text-slate-600 đổi thành text-black
-  const activeClass = (path: string) => 
-    location.pathname === path 
-      ? "bg-blue-600 text-white shadow-md shadow-blue-200" 
+  const activeClass = (path: string) =>
+    location.pathname === path
+      ? "bg-blue-600 text-white shadow-md shadow-blue-200"
       : "text-black hover:bg-slate-100 hover:text-blue-600";
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
-      
+
       {/* --- SIDEBAR --- */}
       <aside className="w-64 bg-white shadow-xl fixed h-full z-20 flex flex-col">
-        <div className="p-6">
-          <div className="bg-blue-600 rounded-xl p-3 flex items-center justify-center gap-2 shadow-lg">
-            <span className="text-xl">🏥</span>
-            <span className="font-bold text-white text-base tracking-tight">MPHCARE</span>
-          </div>
+        <div className="p-5 border-b border-slate-100 flex items-center justify-center bg-slate-50/30 mb-2">
+          <Link to="/trang-chu" className="flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-[1.03] w-full">
+            <img src={logoBv} alt="Bệnh Viện Đa Khoa Mỹ Phước" className="h-12 w-auto object-contain" />
+          </Link>
         </div>
 
         <nav className="mt-2 flex flex-col gap-1 px-4 flex-1 overflow-y-auto pb-4">
           <p className="text-[10px] font-bold text-black uppercase px-4 mb-2 tracking-widest">Main Menu</p>
           <Link to="/trang-chu" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium text-sm ${activeClass('/trang-chu')}`}>
-            <span className="text-lg">📊</span> 
+            <span className="text-lg">📊</span>
             <span>Dashboard</span>
           </Link>
 
           {/* RENDER MENU ĐỘNG TỪ API */}
           {menuData.map((category, catIndex) => {
-            const isExpanded = expandedCategories[catIndex]; 
+            const isExpanded = expandedCategories[catIndex];
 
             return (
               <div key={catIndex} className="mt-2 flex flex-col gap-1">
-                
+
                 {/* Khu vực tiêu đề biến thành Nút bấm */}
-                <div 
+                <div
                   className="flex items-center justify-between px-4 py-2 mt-2 cursor-pointer group hover:bg-slate-50 rounded-xl transition-colors"
                   onClick={() => toggleCategory(catIndex)}
                 >
@@ -127,7 +127,7 @@ const ProtectedRoute = () => {
                     )}
                     {category.title_ctmenu}
                   </p>
-                  
+
                   {/* Icon mũi tên thể hiện đóng mở */}
                   <span className="text-black text-xs transition-transform duration-200">
                     {isExpanded ? "▼" : "▶"}
@@ -141,9 +141,9 @@ const ProtectedRoute = () => {
                       const linkUrl = (menu.url === "/#" || menu.url === "#") ? "#" : menu.url;
 
                       return (
-                        <Link 
-                          key={mIndex} 
-                          to={linkUrl} 
+                        <Link
+                          key={mIndex}
+                          to={linkUrl}
                           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm ${activeClass(linkUrl)}`}
                         >
                           {menu.thumnail && menu.thumnail.startsWith("http") ? (
@@ -157,7 +157,7 @@ const ProtectedRoute = () => {
                     })}
                   </div>
                 )}
-                
+
               </div>
             );
           })}
@@ -165,11 +165,11 @@ const ProtectedRoute = () => {
 
         {/* Footer Sidebar */}
         <div className="p-4 border-t border-slate-200">
-          <button 
+          <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-rose-500 hover:bg-rose-50 transition-all font-medium text-sm"
           >
-            <span className="text-lg">🚪</span> 
+            <span className="text-lg">🚪</span>
             <span>Đăng xuất</span>
           </button>
         </div>
@@ -196,7 +196,7 @@ const ProtectedRoute = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-8 w-full overflow-y-auto"> 
+        <main className="flex-1 p-4 md:p-8 w-full overflow-y-auto">
           <Outlet />
         </main>
       </div>

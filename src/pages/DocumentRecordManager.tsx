@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from "../services/api";
-import { Edit3, Trash2, Search, Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Edit3, Trash2, Search, Plus, ChevronLeft, ChevronRight, X, Paperclip, UploadCloud, Download, FileText, Trash } from 'lucide-react';
+import { PATH_IMAGES } from '../types/PathImages';
 
 // Interface cho item DocumentRecord trả về từ API
 interface DocumentRecordItem {
@@ -51,6 +52,17 @@ interface DepartmentRoom {
     room: string;
     status: number;
 }
+
+// Interface cho file đính kèm
+interface DocumentFileVM {
+    id: number;
+    fileName: string;
+    filePath: string;
+    fileType: string;
+    fileSize: number;
+    createdDate: string;
+    id_DocumentRecord: number;
+}
 const DocumentRecordManager: React.FC = () => {
     const [documentRecords, setDocumentRecords] = useState<DocumentRecordItem[]>([]);
     const [documentGroups, setDocumentGroups] = useState<DocumentGroupItem[]>([]); // Để chọn nhóm hồ sơ
@@ -66,6 +78,14 @@ const DocumentRecordManager: React.FC = () => {
     const [filterDepartment, setFilterDepartment] = useState<DepartmentRoom[]>([]); // Lọc theo phòng ban (admin)
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+
+    // File management states
+    const [selectedRecordForFiles, setSelectedRecordForFiles] = useState<DocumentRecordItem | null>(null);
+    const [isFilesModalOpen, setIsFilesModalOpen] = useState<boolean>(false);
+    const [recordFiles, setRecordFiles] = useState<DocumentFileVM[]>([]);
+    const [filesLoading, setFilesLoading] = useState<boolean>(false);
+    const [uploadingFiles, setUploadingFiles] = useState<boolean>(false);
+    const [tempFiles, setTempFiles] = useState<File[]>([]);
 
     const initialFormState: DocumentRecordFormData = {
         id: 0,
@@ -232,6 +252,105 @@ const DocumentRecordManager: React.FC = () => {
         setFormData(initialFormState);
     };
 
+    // Helpers for file size and date formatting
+    const formatBytes = (bytes: number, decimals = 2) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    };
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return '—';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch {
+            return dateString;
+        }
+    };
+
+    // Fetch files for a record
+    const fetchRecordFiles = async (recordId: number) => {
+        setFilesLoading(true);
+        try {
+            const response = await apiClient.get(`/api/DocumentRecord/${recordId}/files`);
+            setRecordFiles(response.data || []);
+        } catch (error) {
+            console.error("Lỗi lấy danh sách file:", error);
+        } finally {
+            setFilesLoading(false);
+        }
+    };
+
+    const openFilesModal = (item: DocumentRecordItem) => {
+        setSelectedRecordForFiles(item);
+        setIsFilesModalOpen(true);
+        setTempFiles([]);
+        fetchRecordFiles(item.id);
+    };
+
+    const closeFilesModal = () => {
+        setSelectedRecordForFiles(null);
+        setIsFilesModalOpen(false);
+        setRecordFiles([]);
+        setTempFiles([]);
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const filesArray = Array.from(e.target.files);
+            setTempFiles(prev => [...prev, ...filesArray]);
+        }
+    };
+
+    const handleUpload = async () => {
+        if (!selectedRecordForFiles || tempFiles.length === 0) return;
+        setUploadingFiles(true);
+        try {
+            const formDataObj = new FormData();
+            tempFiles.forEach(file => {
+                formDataObj.append("files", file);
+            });
+
+            await apiClient.post(`/api/DocumentRecord/${selectedRecordForFiles.id}/files`, formDataObj, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
+            
+            setTempFiles([]);
+            fetchRecordFiles(selectedRecordForFiles.id);
+        } catch (error: any) {
+            console.error("Lỗi upload file:", error);
+            alert(error.response?.data?.message || "Tải file lên thất bại!");
+        } finally {
+            setUploadingFiles(false);
+        }
+    };
+
+    const handleDeleteFile = async (fileId: number) => {
+        if (!selectedRecordForFiles) return;
+        const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa file này?");
+        if (!confirmDelete) return;
+
+        try {
+            await apiClient.delete(`/api/DocumentRecord/files/${fileId}`);
+            fetchRecordFiles(selectedRecordForFiles.id);
+        } catch (error: any) {
+            console.error("Lỗi xóa file:", error);
+            alert(error.response?.data?.message || "Xóa file thất bại!");
+        }
+    };
+
     // Helper: Lấy class CSS cho badge trạng thái
     const getTrangThaiClass = (trangThai: string) => {
         if (trangThai === 'AN TOÀN') return 'bg-green-50 text-green-700 border border-green-200';
@@ -378,8 +497,9 @@ const DocumentRecordManager: React.FC = () => {
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex justify-end gap-1">
-                                            <button onClick={() => openEdit(item)} className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"><Edit3 className="w-4 h-4" /></button>
-                                            <button onClick={() => confirmDelete(item.id)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-all"><Trash2 className="w-4 h-4" /></button>
+                                            <button onClick={() => openFilesModal(item)} className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded transition-all" title="Tệp đính kèm"><Paperclip className="w-4 h-4" /></button>
+                                            <button onClick={() => openEdit(item)} className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-all" title="Chỉnh sửa"><Edit3 className="w-4 h-4" /></button>
+                                            <button onClick={() => confirmDelete(item.id)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-all" title="Xóa"><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -556,6 +676,172 @@ const DocumentRecordManager: React.FC = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL QUẢN LÝ FILE ĐÍNH KÈM */}
+            {isFilesModalOpen && selectedRecordForFiles && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[999] overflow-y-auto">
+                    <div className="bg-white rounded-xl w-full max-w-2xl shadow-xl overflow-hidden border border-gray-200 animate-in fade-in zoom-in-95 duration-200 my-8">
+                        <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10">
+                            <h3 className="text-sm font-bold uppercase text-gray-700 flex items-center gap-2">
+                                <Paperclip className="w-4 h-4 text-blue-600" />
+                                File đính kèm: {selectedRecordForFiles.title}
+                            </h3>
+                            <button type="button" onClick={closeFilesModal} className="text-gray-400 hover:text-red-500 transition-all"><X className="w-5 h-5" /></button>
+                        </div>
+
+                        <div className="p-5 space-y-6">
+                            {/* Upload Area */}
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-500 uppercase mb-2">Tải lên tài liệu mới</label>
+                                <div className="border border-dashed border-gray-300 rounded-lg p-4 bg-gray-50/50 flex flex-col items-center justify-center gap-2">
+                                    <input
+                                        type="file"
+                                        id="file-upload-input"
+                                        multiple
+                                        className="hidden"
+                                        onChange={handleFileChange}
+                                    />
+                                    <label
+                                        htmlFor="file-upload-input"
+                                        className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors w-full py-4"
+                                    >
+                                        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-1">
+                                            <UploadCloud className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-xs font-semibold text-gray-700">Chọn file từ máy tính</span>
+                                        <span className="text-[10px] text-gray-400 font-medium">Hỗ trợ nhiều file cùng lúc (Hình ảnh, PDF, Văn bản...)</span>
+                                    </label>
+                                    
+                                    {tempFiles.length > 0 && (
+                                        <div className="w-full mt-2 border-t border-gray-200 pt-3">
+                                            <div className="text-[11px] font-bold text-gray-500 mb-2">Danh sách file đã chọn ({tempFiles.length})</div>
+                                            <div className="max-h-32 overflow-y-auto space-y-1.5 pr-1">
+                                                {tempFiles.map((f, i) => (
+                                                    <div key={i} className="flex justify-between items-center bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs shadow-sm">
+                                                        <span className="truncate max-w-[350px] font-medium text-gray-700">{f.name}</span>
+                                                        <span className="text-[10px] text-gray-400 shrink-0 font-mono">({formatBytes(f.size)})</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setTempFiles([])}
+                                                    className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition-colors"
+                                                >
+                                                    Hủy bỏ
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleUpload}
+                                                    disabled={uploadingFiles}
+                                                    className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md text-xs flex items-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-50"
+                                                >
+                                                    {uploadingFiles ? (
+                                                        <>
+                                                            <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></div>
+                                                            Đang tải lên...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <UploadCloud className="w-3.5 h-3.5" />
+                                                            Tải lên ngay
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Files List */}
+                            <div>
+                                <label className="block text-[11px] font-bold text-gray-500 uppercase mb-2">Danh sách tài liệu đã đính kèm</label>
+                                
+                                {filesLoading ? (
+                                    <div className="text-center py-8">
+                                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
+                                        <p className="text-xs text-gray-400 mt-2">Đang tải danh sách file...</p>
+                                    </div>
+                                ) : recordFiles.length === 0 ? (
+                                    <div className="text-center py-8 border border-dashed border-gray-200 rounded-lg bg-gray-50/30">
+                                        <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                                        <p className="text-xs text-gray-400">Chưa có file đính kèm nào cho hồ sơ này.</p>
+                                    </div>
+                                ) : (
+                                    <div className="border border-gray-200 rounded-lg overflow-hidden max-h-[300px] overflow-y-auto">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead className="bg-gray-50 border-b border-gray-200 text-[10px] font-bold uppercase text-gray-500">
+                                                <tr>
+                                                    <th className="px-4 py-2">Tên file</th>
+                                                    <th className="px-4 py-2 w-24 text-center">Dung lượng</th>
+                                                    <th className="px-4 py-2 w-32 text-center">Ngày tải</th>
+                                                    <th className="px-4 py-2 w-20 text-right">Thao tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-150 text-xs">
+                                                {recordFiles.map(file => (
+                                                    <tr key={file.id} className="hover:bg-gray-50/50 transition-colors">
+                                                        <td className="px-4 py-2.5">
+                                                            <a
+                                                                href={PATH_IMAGES + file.filePath}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="font-medium text-blue-600 hover:text-blue-800 hover:underline break-all flex items-center gap-1.5"
+                                                            >
+                                                                <FileText className="w-3.5 h-3.5 shrink-0 text-gray-400" />
+                                                                {file.fileName}
+                                                            </a>
+                                                        </td>
+                                                        <td className="px-4 py-2.5 text-center text-gray-500 font-mono text-[10px]">
+                                                            {formatBytes(file.fileSize)}
+                                                        </td>
+                                                        <td className="px-4 py-2.5 text-center text-gray-500 text-[10px]">
+                                                            {formatDate(file.createdDate)}
+                                                        </td>
+                                                        <td className="px-4 py-2.5 text-right">
+                                                            <div className="flex justify-end gap-1.5">
+                                                                <a
+                                                                    href={PATH_IMAGES + file.filePath}
+                                                                    download={file.fileName}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"
+                                                                    title="Tải xuống"
+                                                                >
+                                                                    <Download className="w-3.5 h-3.5" />
+                                                                </a>
+                                                                <button
+                                                                    onClick={() => handleDeleteFile(file.id)}
+                                                                    className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-all"
+                                                                    title="Xóa file"
+                                                                >
+                                                                    <Trash className="w-3.5 h-3.5" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="px-5 py-3 border-t border-gray-100 flex justify-end bg-gray-50">
+                            <button
+                                type="button"
+                                onClick={closeFilesModal}
+                                className="px-4 py-2 bg-gray-200 hover:bg-gray-350 text-gray-750 font-semibold rounded-lg transition-colors text-xs"
+                            >
+                                Đóng
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
