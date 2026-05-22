@@ -9,6 +9,9 @@ import MenuManager from '../pages/MenuManager';
 import RoleManager from '../pages/Role/RoleManager';
 import PermissonManager from '../pages/Role/PermissonManager';
 import UserManager from '../pages/UserManager';
+import DepartmentRoomManager from '../pages/DepartmentRoomManager';
+import DocumentGroupManager from '../pages/DocumentGroupManager';
+import DocumentRecordManager from '../pages/DocumentRecordManager';
 
 
 export const router = createBrowserRouter([
@@ -36,21 +39,34 @@ export const router = createBrowserRouter([
         path: 'quan-ly-menu',
         element: <MenuManager />, // Nội dung Menu sẽ hiện ở Outlet
       },
-         {
+      {
         path: 'quan-ly-role',
         element: <RoleManager />, // Nội dung Menu sẽ hiện ở Outlet
       },
-        {
+      {
         path: 'quan-ly-role/:id/:name', // Đường dẫn có tham số :id
-        element: < PermissonManager/>, // Nội dung Menu sẽ hiện ở Outlet
+        element: < PermissonManager />, // Nội dung Menu sẽ hiện ở Outlet
       },
       {
         path: 'quan-ly-tai-khoan', // Đường dẫn có tham số :id
-        element: < UserManager/>, // Nội dung Menu sẽ hiện ở Outlet
+        element: < UserManager />, // Nội dung Menu sẽ hiện ở Outlet
+      },
+      {
+        path: 'quan-ly-phong-ban',
+        element: <DepartmentRoomManager />,
+      },
+      {
+        path: 'quan-ly-nhom-tai-lieu',
+        element: <DocumentGroupManager />,
+      },
+      {
+        path: 'quan-ly-ho-so',
+        element: <DocumentRecordManager />,
       },
 
- 
-      
+
+
+
     ],
   },
   {
