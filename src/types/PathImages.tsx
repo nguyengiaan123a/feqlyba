@@ -1,1 +1,1 @@
-export const PATH_IMAGES = "https://localhost:7198/Uploads/";
+export const PATH_IMAGES = `http://${window.location.hostname}:8080/Uploads/`;

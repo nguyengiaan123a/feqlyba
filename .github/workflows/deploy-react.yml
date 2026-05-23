@@ -18,10 +18,10 @@ jobs:
         node-version: '20' 
 
     - name: 📦 Cài đặt các thư viện (npm install)
-      run: npm install
+      run: pnpm install
 
     - name: ⚙️ Build source code React (Vite)
-      run: npm run build
+      run: pnpm run build
 
     - name: 🚀 Copy đè file lên thư mục web IIS
       shell: powershell
