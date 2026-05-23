@@ -1,0 +1,29 @@
+name: Deploy React Frontend to IIS
+
+on:
+  push:
+    branches: [ "main" ] # 
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+    - name: 📥 Tải source code mới nhất về Server
+      uses: actions/checkout@v4
+
+    - name: 🛠️ Cài đặt môi trường Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' 
+
+    - name: 📦 Cài đặt các thư viện (npm install)
+      run: npm install
+
+    - name: ⚙️ Build source code React (Vite)
+      run: npm run build
+
+    - name: 🚀 Copy đè file lên thư mục web IIS
+      shell: powershell
+      # Vite xuất code ra thư mục dist, nên copy từ ./dist/*
+      run: Copy-Item -Path ./dist/* -Destination "C:\inetpub\wwwroot\feqlyhsba" -Recurse -Force

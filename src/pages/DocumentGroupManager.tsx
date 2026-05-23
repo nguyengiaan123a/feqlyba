@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from "../services/api";
-import { Edit3, Trash2, Search, Plus, ChevronLeft, ChevronRight, X, Folder } from 'lucide-react';
+import { Edit3, Trash2, Search, Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 // Interface cho item DocumentGroup trả về từ API
 interface DocumentGroupItem {

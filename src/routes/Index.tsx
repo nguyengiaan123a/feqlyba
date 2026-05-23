@@ -73,4 +73,4 @@ export const router = createBrowserRouter([
     path: '*',
     element: <div className="p-10 text-center">404 - Không tìm thấy trang</div>,
   },
-]);
+], { basename: '/' });

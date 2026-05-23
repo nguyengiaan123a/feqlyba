@@ -5,9 +5,7 @@ import type { ICategoryGroup } from '../types/Menu/ICategoryGroup';
 import type { IPagination } from '../types/IPagination';
 import type { CategoryMenu } from '../types/Menu/Categorymenu';
 import { 
-  Edit3, Trash2, Search, Plus, ChevronLeft, 
-  ChevronRight, X, Image as ImageIcon, Link as LinkIcon, 
-  Layers
+  Edit3, Trash2, Search, X, Layers
 } from 'lucide-react';
 
 const MenuManager: React.FC = () => {

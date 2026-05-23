@@ -8,9 +8,8 @@ const ProtectedRoute = () => {
   const [isAuth, setIsAuth] = useState<boolean | null>(null);
   const [userName, setUserName] = useState<string>("User");
 
-  // State lưu danh sách Menu từ API và mảng các URL được phép truy cập
+  // State lưu danh sách Menu từ API
   const [menuData, setMenuData] = useState<any[]>([]);
-  const [allowedUrls, setAllowedUrls] = useState<string[]>([]);
 
   // State quản lý việc Đóng/Mở của các danh mục cha
   const [expandedCategories, setExpandedCategories] = useState<Record<number, boolean>>({});
@@ -48,7 +47,6 @@ const ProtectedRoute = () => {
               }
             });
           });
-          setAllowedUrls(urls);
         }
 
         setIsAuth(true);

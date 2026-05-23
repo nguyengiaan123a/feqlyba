@@ -66,7 +66,6 @@ interface DocumentFileVM {
 const DocumentRecordManager: React.FC = () => {
     const [documentRecords, setDocumentRecords] = useState<DocumentRecordItem[]>([]);
     const [documentGroups, setDocumentGroups] = useState<DocumentGroupItem[]>([]); // Để chọn nhóm hồ sơ
-    const [allDocumentGroups, setAllDocumentGroups] = useState<DocumentGroupItem[]>([]); // Để lọc theo phòng ban (admin)
     const [loading, setLoading] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, pageSize: 15 });
@@ -150,7 +149,6 @@ const DocumentRecordManager: React.FC = () => {
             });
             const groups = response.data.data || [];
             setDocumentGroups(groups);
-            setAllDocumentGroups(groups);
         } catch (error) {
             console.error("Lỗi lấy dữ liệu nhóm hồ sơ:", error);
         }

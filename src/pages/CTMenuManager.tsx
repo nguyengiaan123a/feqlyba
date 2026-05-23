@@ -1,20 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import apiClient from "../services/api";
-import { Edit3, Trash2, Search, Plus, ChevronLeft, ChevronRight, X, Image as ImageIcon } from 'lucide-react';
+import { Edit3, Trash2, Search, Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
+
+interface MenuItemType {
+  id: number;
+  order: number;
+  title: string;
+  status: number;
+  thumnail: string;
+}
 
 const CTMenuManager = () => {
-  const [menus, setMenus] = useState([]);
+  const [menus, setMenus] = useState<MenuItemType[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, pageSize: 15 });
   
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ title: '', order: 0, status: 1, thumnail: '' });
 
   // State cho Popup xác nhận Xóa
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
   // 1. Lấy danh sách Menu
   const fetchData = async () => {
@@ -37,7 +45,7 @@ const CTMenuManager = () => {
   }, [pagination.currentPage, searchTerm]);
 
   // 2. Thêm mới hoặc Cập nhật (Theo Swagger: /api/CTmenu)
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       if (editingId) {
@@ -68,12 +76,12 @@ const CTMenuManager = () => {
     }
   };
 
-  const confirmDelete = (id) => {
+  const confirmDelete = (id: number) => {
     setItemToDelete(id);
     setIsDeleteModalOpen(true);
   };
 
-  const openEdit = (item) => {
+  const openEdit = (item: MenuItemType) => {
     setEditingId(item.id);
     setFormData({ 
       title: item.title, 
@@ -133,9 +141,9 @@ const CTMenuManager = () => {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading ? (
-              <tr><td colSpan="5" className="text-center py-10"><div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div></td></tr>
+              <tr><td colSpan={5} className="text-center py-10"><div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div></td></tr>
             ) : menus.length === 0 ? (
-              <tr><td colSpan="5" className="text-center py-10 text-sm text-gray-400">Không tìm thấy dữ liệu</td></tr>
+              <tr><td colSpan={5} className="text-center py-10 text-sm text-gray-400">Không tìm thấy dữ liệu</td></tr>
             ) : (
               menus.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50/80 transition-colors">
@@ -147,7 +155,7 @@ const CTMenuManager = () => {
                           src={item.thumnail} 
                           className="w-full h-full object-cover" 
                           alt="icon" 
-                          onError={(e) => { e.target.src = 'https://api.iconify.design/lucide/image-off.svg?color=%23cbd5e1'; }}
+                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://api.iconify.design/lucide/image-off.svg?color=%23cbd5e1'; }}
                         />
                       ) : (
                         <img src="https://api.iconify.design/lucide/list.svg?color=%23475569" className="w-4 h-4" />
@@ -226,7 +234,7 @@ const CTMenuManager = () => {
                   />
                   {formData.thumnail && (
                     <div className="w-10 h-10 shrink-0 bg-white border border-gray-200 rounded-lg p-1">
-                      <img src={formData.thumnail} alt="preview" className="w-full h-full object-contain" onError={(e) => e.target.style.opacity='0'} />
+                      <img src={formData.thumnail} alt="preview" className="w-full h-full object-contain" onError={(e) => (e.target as HTMLImageElement).style.opacity='0'} />
                     </div>
                   )}
                 </div>
