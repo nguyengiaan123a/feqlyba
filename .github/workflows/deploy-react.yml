@@ -15,13 +15,13 @@ jobs:
     - name: 🛠️ Cài đặt môi trường Node.js 20
       uses: actions/setup-node@v4
       with:
-        node-version: '20' 
+        node-version: '24' 
 
     - name: 📦 Cài đặt các thư viện (npm install)
-      run: npm install --prefer-offline
+      run: pnpm install --prefer-offline
 
     - name: ⚙️ Build source code React (Vite)
-      run: npm run build
+      run: pnpm run build
 
     - name: 🚀 Copy đè file lên thư mục web IIS
       shell: powershell
