@@ -208,7 +208,7 @@ export default function Index() {
                   paddingAngle={5}
                   dataKey="value"
                   style={{ filter: 'url(#shadow3d)' }}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   labelLine={false}
                 >
                   <Cell key="cell-0" />

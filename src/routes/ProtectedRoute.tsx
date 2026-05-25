@@ -181,7 +181,7 @@ const ProtectedRoute = () => {
             <h1 className="text-black font-bold text-base">
               HỆ THỐNG QUẢN LÝ LƯU TRỮ HỒ SƠ MPH
             </h1>
-            <p className="text-xs text-slate-500">Chào mừng trở lại!</p>
+            <p className="text-xs text-slate-500">Chào mừng trở lại, {userName}!</p>
           </div>
 
 
