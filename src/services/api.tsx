@@ -1,21 +1,21 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-  baseURL: `http://${window.location.hostname}:8080/`, // ✅ đúng API
-  withCredentials: true, // ✅ gửi cookie
+    baseURL: `http://${window.location.hostname}:80/`, // ✅ đúng API
+    withCredentials: true, // ✅ gửi cookie
 });
 
 // ❌ XÓA interceptor request (không cần token header)
 
 // Interceptor response
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      window.location.href = '/login';
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
 );
 
 export default apiClient;
