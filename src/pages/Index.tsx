@@ -78,7 +78,7 @@ export default function Index() {
           </div>
           <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Xin chào, {userName}!</h2>
           <p className="text-sm text-blue-100 max-w-xl">
-            Chào mừng bạn đến với Hệ thống Quản lý Hồ sơ Bệnh án & Lưu trữ MPH. Dưới đây là báo cáo tổng quan tình trạng hồ sơ hiện tại.
+            Chào mừng bạn đến với Hệ thống Quản lý Hồ sơ hành chính MPH. Dưới đây là báo cáo tổng quan tình trạng hồ sơ hiện tại.
           </p>
         </div>
       </div>

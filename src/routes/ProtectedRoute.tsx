@@ -6,7 +6,7 @@ import logoBv from "../Asset/Images/Logobv.png";
 
 const ProtectedRoute = () => {
   const [isAuth, setIsAuth] = useState<boolean | null>(null);
-  const [userName, setUserName] = useState<string>("User");
+  const [userName, setUserName] = useState<string>("");
 
   // State lưu danh sách Menu từ API
   const [menuData, setMenuData] = useState<any[]>([]);
@@ -179,7 +179,7 @@ const ProtectedRoute = () => {
           <div className="flex flex-col">
             {/* Đổi thành text-black */}
             <h1 className="text-black font-bold text-base">
-              Hệ thống quản lý
+              HỆ THỐNG QUẢN LÝ LƯU TRỮ HỒ SƠ MPH
             </h1>
             <p className="text-xs text-slate-500">Chào mừng trở lại, {userName}!</p>
           </div>
