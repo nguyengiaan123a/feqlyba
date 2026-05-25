@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from "../services/api";
-import { Edit3, Trash2, Search, Plus, ChevronLeft, ChevronRight, X, Paperclip, UploadCloud, Download, FileText, Trash } from 'lucide-react';
+import { Edit3, Trash2, Search, Plus, ChevronLeft, ChevronRight, X, Paperclip, UploadCloud, Download, FileText, Trash, DownloadCloud } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { PATH_IMAGES } from '../types/PathImages';
 
 // Interface cho item DocumentRecord trả về từ API
@@ -22,6 +23,7 @@ interface DocumentRecordItem {
     id_DocumentGroup: number | null;
     tenNhomHoSo: string;
     createdDate: string;
+    loaiHoSo?: string;
 }
 
 // Interface cho DocumentGroup (phòng ban)
@@ -44,6 +46,8 @@ interface DocumentRecordFormData {
     mucDoBaoMat: string;
     ghiChu: string;
     id_DocumentGroup: number | string;
+    id_DepartmentRoom?: string;
+    loaiHoSo?: string;
 }
 // interface DepartmentRoom
 
@@ -77,6 +81,78 @@ const DocumentRecordManager: React.FC = () => {
     const [filterDepartment, setFilterDepartment] = useState<DepartmentRoom[]>([]); // Lọc theo phòng ban (admin)
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [selectedRecords, setSelectedRecords] = useState<number[]>([]);
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            const allIds = documentRecords.map(r => r.id);
+            setSelectedRecords(allIds);
+        } else {
+            setSelectedRecords([]);
+        }
+    };
+
+    const handleSelectRecord = (id: number) => {
+        setSelectedRecords(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const exportToExcel = async () => {
+        try {
+            let dataToExport: DocumentRecordItem[] = [];
+
+            if (selectedRecords.length > 0) {
+                // Export selected from current page
+                dataToExport = documentRecords.filter(r => selectedRecords.includes(r.id));
+            } else {
+                // Export all based on current filters
+                const response = await apiClient.get('/api/DocumentRecord', {
+                    params: {
+                        page: 1,
+                        pageSize: 100000,
+                        search: searchTerm,
+                        Id_DocumentGroup: filterDocumentGroupId || undefined,
+                        Id_DepartmentRoom: filterDepartmentId || undefined
+                    }
+                });
+                dataToExport = response.data.data || [];
+            }
+
+            if (dataToExport.length === 0) {
+                alert("Không có dữ liệu để xuất");
+                return;
+            }
+
+            const worksheetData = dataToExport.map((item, index) => ({
+                'STT': index + 1,
+                'Mã Hồ Sơ': item.maHoSo || '',
+                'Tên Hồ Sơ / Tài Liệu': item.title || '',
+                'Loại Hồ Sơ': item.loaiHoSo || '',
+                'Nhóm Hồ Sơ': item.tenNhomHoSo || '',
+                'Phòng Ban': item.tenPhongBan || item.id_DepartmentRoom || '',
+                'Năm Hiệu Lực': item.namHieuLuc || '',
+                'Thời Hạn Lưu Trữ': item.thoiHanLuuTru >= 999 ? 'Vĩnh viễn' : `${item.thoiHanLuuTru} năm`,
+                'Năm Hết Hạn': item.namHetHan || '',
+                'Vị Trí Lưu Trữ': item.viTriLuuTru || '',
+                'Người Quản Lý': item.nguoiQuanLy || '',
+                'Tình Trạng': item.tinhTrang || '',
+                'Trạng Thái': item.trangThai || '',
+                'Mức Độ Bảo Mật': item.mucDoBaoMat || '',
+                'Ghi Chú': item.ghiChu || ''
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachHoSo");
+
+            XLSX.writeFile(workbook, `DanhSachHoSo_${new Date().getTime()}.xlsx`);
+
+        } catch (error) {
+            console.error("Lỗi khi xuất Excel:", error);
+            alert("Có lỗi xảy ra khi xuất file Excel");
+        }
+    };
 
     // File management states
     const [selectedRecordForFiles, setSelectedRecordForFiles] = useState<DocumentRecordItem | null>(null);
@@ -97,7 +173,9 @@ const DocumentRecordManager: React.FC = () => {
         tinhTrang: 'Tốt',
         mucDoBaoMat: 'Thường',
         ghiChu: '',
-        id_DocumentGroup: ''
+        id_DocumentGroup: '',
+        id_DepartmentRoom: '',
+        loaiHoSo: ''
     };
     const [formData, setFormData] = useState<DocumentRecordFormData>(initialFormState);
 
@@ -240,7 +318,9 @@ const DocumentRecordManager: React.FC = () => {
             tinhTrang: item.tinhTrang || 'Tốt',
             mucDoBaoMat: item.mucDoBaoMat || 'Thường',
             ghiChu: item.ghiChu || '',
-            id_DocumentGroup: item.id_DocumentGroup || ''
+            id_DocumentGroup: item.id_DocumentGroup || '',
+            id_DepartmentRoom: item.id_DepartmentRoom || '',
+            loaiHoSo: item.loaiHoSo || ''
         });
         setIsModalOpen(true);
     };
@@ -324,7 +404,7 @@ const DocumentRecordManager: React.FC = () => {
                     "Content-Type": "multipart/form-data"
                 }
             });
-            
+
             setTempFiles([]);
             fetchRecordFiles(selectedRecordForFiles.id);
         } catch (error: any) {
@@ -410,8 +490,15 @@ const DocumentRecordManager: React.FC = () => {
                         />
                     </div>
                     <button
+                        onClick={exportToExcel}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all active:scale-95 text-sm whitespace-nowrap shadow-sm"
+                    >
+                        <DownloadCloud className="w-4 h-4" />
+                        {selectedRecords.length > 0 ? `Xuất Excel (${selectedRecords.length})` : 'Xuất Excel (Tất cả)'}
+                    </button>
+                    <button
                         onClick={() => { resetForm(); setIsModalOpen(true); }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all active:scale-95 text-sm whitespace-nowrap"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all active:scale-95 text-sm whitespace-nowrap shadow-sm"
                     >
                         <Plus className="w-4 h-4" />
                         Thêm mới
@@ -424,8 +511,17 @@ const DocumentRecordManager: React.FC = () => {
                 <table className="w-full text-left border-collapse min-w-[1200px]">
                     <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
                         <tr>
+                            <th className="px-4 py-3 text-center w-10">
+                                <input
+                                    type="checkbox"
+                                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                    checked={documentRecords.length > 0 && selectedRecords.length === documentRecords.length}
+                                    onChange={handleSelectAll}
+                                />
+                            </th>
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600 w-12 text-center">STT</th>
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600">Hồ sơ</th>
+                            <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600">Loại hồ sơ</th>
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600 text-center">Năm HL</th>
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600 text-center">Lưu trữ</th>
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600 text-center">Hết hạn</th>
@@ -438,12 +534,20 @@ const DocumentRecordManager: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {loading ? (
-                            <tr><td colSpan={10} className="text-center py-10"><div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div></td></tr>
+                            <tr><td colSpan={13} className="text-center py-10"><div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div></td></tr>
                         ) : documentRecords.length === 0 ? (
-                            <tr><td colSpan={10} className="text-center py-10 text-sm text-gray-400">Không tìm thấy dữ liệu</td></tr>
+                            <tr><td colSpan={13} className="text-center py-10 text-sm text-gray-400">Không tìm thấy dữ liệu</td></tr>
                         ) : (
                             documentRecords.map((item, index) => (
-                                <tr key={item.id} className="hover:bg-gray-50/80 transition-colors">
+                                <tr key={item.id} className={`hover:bg-gray-50/80 transition-colors ${selectedRecords.includes(item.id) ? 'bg-blue-50/50' : ''}`}>
+                                    <td className="px-4 py-3 text-center">
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                            checked={selectedRecords.includes(item.id)}
+                                            onChange={() => handleSelectRecord(item.id)}
+                                        />
+                                    </td>
                                     <td className="px-4 py-3 text-center font-medium text-sm text-gray-500">
                                         {(pagination.currentPage - 1) * pagination.pageSize + index + 1}
                                     </td>
@@ -460,6 +564,15 @@ const DocumentRecordManager: React.FC = () => {
                                                 </div>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">
+                                        {item.loaiHoSo ? (
+                                            <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold shadow-sm">
+                                                {item.loaiHoSo}
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-400">—</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-gray-600 font-medium">
                                         {item.namHieuLuc || '—'}
@@ -530,15 +643,15 @@ const DocumentRecordManager: React.FC = () => {
 
             {/* MODAL THÊM / SỬA */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[999] overflow-y-auto">
-                    <div className="bg-white rounded-xl w-full max-w-2xl shadow-xl overflow-hidden border border-gray-200 animate-in fade-in zoom-in-95 duration-200 my-8">
-                        <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10">
-                            <h3 className="text-sm font-bold uppercase text-gray-700">{editingId ? 'Chỉnh sửa Hồ sơ' : 'Thêm Hồ sơ mới'}</h3>
-                            <button type="button" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-all"><X className="w-5 h-5" /></button>
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-[999] overflow-y-auto">
+                    <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden border border-white/20 animate-in fade-in zoom-in-95 duration-200 my-8 flex flex-col">
+                        <div className="px-6 py-4 flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-700 text-white sticky top-0 z-10 shadow-md">
+                            <h3 className="text-lg font-extrabold uppercase tracking-wider">{editingId ? 'Chỉnh sửa Hồ sơ / Tài liệu' : 'Thêm Hồ sơ mới'}</h3>
+                            <button type="button" onClick={() => setIsModalOpen(false)} className="text-white/70 hover:text-white transition-all bg-white/10 hover:bg-white/20 p-1.5 rounded-full"><X className="w-5 h-5" /></button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-5">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <form onSubmit={handleSubmit} className="p-6 md:p-8 flex-1 bg-gray-50/50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
 
                                 {/* Mã Hồ Sơ - người dùng tự nhập */}
                                 <div>
@@ -546,7 +659,7 @@ const DocumentRecordManager: React.FC = () => {
                                     <input
                                         required
                                         type="text"
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
                                         value={formData.maHoSo}
                                         onChange={(e) => setFormData({ ...formData, maHoSo: e.target.value })}
                                         placeholder="Nhập mã hồ sơ (VD: HS-001)..."
@@ -556,7 +669,7 @@ const DocumentRecordManager: React.FC = () => {
                                 <div>
                                     <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Nhóm Hồ sơ</label>
                                     <select
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
                                         value={formData.id_DocumentGroup}
                                         onChange={(e) => setFormData({ ...formData, id_DocumentGroup: e.target.value })}
                                     >
@@ -567,12 +680,28 @@ const DocumentRecordManager: React.FC = () => {
                                     </select>
                                 </div>
 
+                                {isAdmin && (
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Phòng ban (Admin)</label>
+                                        <select
+                                            className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
+                                            value={formData.id_DepartmentRoom?.toLowerCase() || ''}
+                                            onChange={(e) => setFormData({ ...formData, id_DepartmentRoom: e.target.value })}
+                                        >
+                                            <option value="">-- Chọn phòng ban --</option>
+                                            {filterDepartment.map(g => (
+                                                <option key={g.id} value={g.id.toLowerCase()}>{g.room}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
                                 <div className="md:col-span-2">
                                     <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Tên Hồ sơ / Tài liệu <span className="text-red-500">*</span></label>
                                     <input
                                         required
                                         type="text"
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
                                         value={formData.title}
                                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                         placeholder="Nhập tên hồ sơ..."
@@ -580,10 +709,21 @@ const DocumentRecordManager: React.FC = () => {
                                 </div>
 
                                 <div>
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Loại hồ sơ</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
+                                        value={formData.loaiHoSo || ''}
+                                        onChange={(e) => setFormData({ ...formData, loaiHoSo: e.target.value })}
+                                        placeholder="VD: Scan, Hồ sơ giấy ...(có thể để trống)"
+                                    />
+                                </div>
+
+                                <div>
                                     <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Người quản lý</label>
                                     <input
                                         type="text"
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
                                         value={formData.nguoiQuanLy}
                                         onChange={(e) => setFormData({ ...formData, nguoiQuanLy: e.target.value })}
                                         placeholder="Tên người quản lý..."
@@ -595,7 +735,7 @@ const DocumentRecordManager: React.FC = () => {
                                     <input
                                         required
                                         type="number"
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
                                         value={formData.namHieuLuc}
                                         onChange={(e) => setFormData({ ...formData, namHieuLuc: Number(e.target.value) })}
                                     />
@@ -607,7 +747,7 @@ const DocumentRecordManager: React.FC = () => {
                                         <input
                                             required
                                             type="number"
-                                            className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                            className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
                                             value={formData.thoiHanLuuTru}
                                             onChange={(e) => setFormData({ ...formData, thoiHanLuuTru: Number(e.target.value) })}
                                         />
@@ -619,7 +759,7 @@ const DocumentRecordManager: React.FC = () => {
                                     <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Vị trí lưu trữ</label>
                                     <input
                                         type="text"
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
                                         value={formData.viTriLuuTru}
                                         onChange={(e) => setFormData({ ...formData, viTriLuuTru: e.target.value })}
                                         placeholder="Kho/Tủ/Kệ..."
@@ -629,7 +769,7 @@ const DocumentRecordManager: React.FC = () => {
                                 <div>
                                     <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Tình trạng</label>
                                     <select
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
                                         value={formData.tinhTrang}
                                         onChange={(e) => setFormData({ ...formData, tinhTrang: e.target.value })}
                                     >
@@ -643,7 +783,7 @@ const DocumentRecordManager: React.FC = () => {
                                 <div>
                                     <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Mức độ bảo mật</label>
                                     <select
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
                                         value={formData.mucDoBaoMat}
                                         onChange={(e) => setFormData({ ...formData, mucDoBaoMat: e.target.value })}
                                     >
@@ -656,10 +796,10 @@ const DocumentRecordManager: React.FC = () => {
                                 <div className="md:col-span-2">
                                     <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Ghi chú</label>
                                     <textarea
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none min-h-[80px]"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all min-h-[100px]"
                                         value={formData.ghiChu}
                                         onChange={(e) => setFormData({ ...formData, ghiChu: e.target.value })}
-                                        placeholder="Ghi chú thêm..."
+                                        placeholder="Ghi chú thêm (nếu có)..."
                                     ></textarea>
                                 </div>
 
@@ -712,7 +852,7 @@ const DocumentRecordManager: React.FC = () => {
                                         <span className="text-xs font-semibold text-gray-700">Chọn file từ máy tính</span>
                                         <span className="text-[10px] text-gray-400 font-medium">Hỗ trợ nhiều file cùng lúc (Hình ảnh, PDF, Văn bản...)</span>
                                     </label>
-                                    
+
                                     {tempFiles.length > 0 && (
                                         <div className="w-full mt-2 border-t border-gray-200 pt-3">
                                             <div className="text-[11px] font-bold text-gray-500 mb-2">Danh sách file đã chọn ({tempFiles.length})</div>
@@ -759,7 +899,7 @@ const DocumentRecordManager: React.FC = () => {
                             {/* Files List */}
                             <div>
                                 <label className="block text-[11px] font-bold text-gray-500 uppercase mb-2">Danh sách tài liệu đã đính kèm</label>
-                                
+
                                 {filesLoading ? (
                                     <div className="text-center py-8">
                                         <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>

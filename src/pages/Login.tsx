@@ -61,7 +61,7 @@ export default function Login() {
       <div className="hidden lg:flex lg:w-1/2 bg-blue-700 items-center justify-center p-12 text-white">
         <div className="max-w-lg text-center">
           <h1 className="mb-6 text-5xl font-extrabold tracking-tight">
-            Quản lý hồ sơ bệnh án
+            Quản lý hồ sơ hành chính
           </h1>
           <p className="mb-6 text-lg text-blue-200">
             Bệnh Viện Đa Khoa Mỹ Phước

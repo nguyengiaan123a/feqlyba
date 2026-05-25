@@ -13,6 +13,7 @@ interface UserItem {
   roleName?: string;
   role?: string;
   idDepartmentRoom?: string;
+  chucVu?: string;
 }
 
 // Định nghĩa interface cho form data 
@@ -22,6 +23,7 @@ interface UserFormData {
   fullname: string;
   idDepartmentRoom: string;
   roleName: string;
+  chucVu: string;
 }
 
 interface role {
@@ -51,7 +53,8 @@ const UserManager: React.FC = () => {
     password: '',
     fullname: '',
     idDepartmentRoom: '',
-    roleName: ''
+    roleName: '',
+    chucVu: ''
   };
   const [formData, setFormData] = useState<UserFormData>(initialFormState);
 
@@ -126,7 +129,8 @@ const UserManager: React.FC = () => {
         Username: formData.username,
         Fullname: formData.fullname,
         idDepartmentRoom: formData.idDepartmentRoom,
-        RoleName: formData.roleName
+        RoleName: formData.roleName,
+        ChucVu: formData.chucVu
       };
 
       if (formData.password) {
@@ -172,11 +176,12 @@ const UserManager: React.FC = () => {
     setEditingId(item.id);
     setFormData({
       username: item.username || item.userName || '',
-      password: '', // Luôn để trống password khi mở form sửa
+      password: item.password || '', // Luôn để trống password khi mở form sửa
       fullname: item.fullname || item.fullName || '',
       // ✅ FIX: Ép kiểu về chữ thường để so sánh chuẩn xác với thẻ option
       idDepartmentRoom: item.idDepartmentRoom ? item.idDepartmentRoom.toLowerCase() : '',
-      roleName: item.role ? item.role.toLowerCase() : ''
+      roleName: item.role ? item.role.toLowerCase() : '',
+      chucVu: item.chucVu || ''
     });
     setIsModalOpen(true);
   };
@@ -223,6 +228,7 @@ const UserManager: React.FC = () => {
               <th className="px-5 py-3 font-bold text-xs uppercase text-gray-600 w-16 text-center">STT</th>
               <th className="px-5 py-3 font-bold text-xs uppercase text-gray-600">Tài khoản</th>
               <th className="px-5 py-3 font-bold text-xs uppercase text-gray-600">Họ và tên</th>
+              <th className="px-5 py-3 font-bold text-xs uppercase text-gray-600">Chức vụ</th>
               <th className="px-5 py-3 font-bold text-xs uppercase text-gray-600">Phòng ban</th>
               <th className="px-5 py-3 font-bold text-xs uppercase text-gray-600 text-center w-32">Quyền (Role)</th>
               <th className="px-5 py-3 font-bold text-xs uppercase text-gray-600 text-right w-32">Thao tác</th>
@@ -230,9 +236,9 @@ const UserManager: React.FC = () => {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading ? (
-              <tr><td colSpan={6} className="text-center py-10"><div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div></td></tr>
+              <tr><td colSpan={7} className="text-center py-10"><div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div></td></tr>
             ) : users.length === 0 ? (
-              <tr><td colSpan={6} className="text-center py-10 text-sm text-gray-400">Không tìm thấy dữ liệu</td></tr>
+              <tr><td colSpan={7} className="text-center py-10 text-sm text-gray-400">Không tìm thấy dữ liệu</td></tr>
             ) : (
               users.map((item, index) => (
                 <tr key={item.id} className="hover:bg-gray-50/80 transition-colors">
@@ -252,6 +258,9 @@ const UserManager: React.FC = () => {
                   </td>
                   <td className="px-5 py-3 text-sm font-medium text-gray-700">
                     {item.fullName || item.fullname}
+                  </td>
+                  <td className="px-5 py-3 text-sm font-medium text-gray-700">
+                    {item.chucVu || '—'}
                   </td>
                   <td className="px-5 py-3 text-sm font-medium text-gray-700">
                     {item.idDepartmentRoom?.toUpperCase() || 'N/A'}
@@ -318,9 +327,15 @@ const UserManager: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Họ và tên (Fullname) <span className="text-red-500">*</span></label>
-                <input type="text" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={formData.fullname} onChange={(e) => setFormData({ ...formData, fullname: e.target.value })} placeholder="Nhập họ và tên đầy đủ" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Họ và tên (Fullname) <span className="text-red-500">*</span></label>
+                  <input type="text" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={formData.fullname} onChange={(e) => setFormData({ ...formData, fullname: e.target.value })} placeholder="Nhập họ và tên đầy đủ" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Chức vụ</label>
+                  <input type="text" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={formData.chucVu} onChange={(e) => setFormData({ ...formData, chucVu: e.target.value })} placeholder="VD: Trưởng khoa..." />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

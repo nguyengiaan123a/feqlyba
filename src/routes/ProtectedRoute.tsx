@@ -181,22 +181,28 @@ const ProtectedRoute = () => {
             <h1 className="text-black font-bold text-base">
               HỆ THỐNG QUẢN LÝ LƯU TRỮ HỒ SƠ MPH
             </h1>
-            <p className="text-xs text-slate-500">Chào mừng trở lại, {userName}!</p>
+            <p className="text-xs text-slate-500">Chào mừng trở lại!</p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="bg-slate-50 border border-slate-200 px-4 py-2 rounded-2xl flex items-center gap-3">
-              <div className="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
-                {userName.charAt(0).toUpperCase()}
-              </div>
-              <span className="text-black font-semibold text-xs">{userName}</span>
-            </div>
-          </div>
+
         </header>
 
         <main className="flex-1 p-4 md:p-8 w-full overflow-y-auto">
           <Outlet />
         </main>
+        <footer className="bg-white border-t border-slate-200 px-6 py-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-sm text-slate-500">
+
+            <p>
+              © 2026 <span className="font-semibold text-slate-700">PCNTT - Bệnh Viện Đa Khoa Mỹ Phước</span>
+            </p>
+
+            <p className="text-xs text-slate-400">
+              Hệ thống quản lý lưu trữ hồ sơ nội bộ
+            </p>
+
+          </div>
+        </footer>
       </div>
     </div>
   );
