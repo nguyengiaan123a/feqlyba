@@ -69,7 +69,7 @@ interface DocumentFileVM {
 }
 const DocumentRecordManager: React.FC = () => {
     const [documentRecords, setDocumentRecords] = useState<DocumentRecordItem[]>([]);
-    const [documentGroups, setDocumentGroups] = useState<DocumentGroupItem[]>([]); // Để chọn nhóm hồ sơ
+    const [documentGroups, setDocumentGroups] = useState<DocumentGroupItem[]>([]); // Để chọn nhóm hồ sơ 123
     const [loading, setLoading] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, pageSize: 15 });
