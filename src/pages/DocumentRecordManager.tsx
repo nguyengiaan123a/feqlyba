@@ -773,10 +773,10 @@ const DocumentRecordManager: React.FC = () => {
                                         value={formData.tinhTrang}
                                         onChange={(e) => setFormData({ ...formData, tinhTrang: e.target.value })}
                                     >
-                                        <option value="Tốt">Tốt</option>
-                                        <option value="Hư hỏng nhẹ">Hư hỏng nhẹ</option>
-                                        <option value="Hư hỏng nặng">Hư hỏng nặng</option>
-                                        <option value="Mất">Mất</option>
+                                        <option value="Đang lưu trữ">Đang lưu trữ</option>
+                                        <option value="Đang cập nhật">Đang cập nhật</option>
+                                        <option value="Đã tiêu huỷ">Đã tiêu huỷ</option>
+                                        <option value="Chưa xây dựng">Chưa xây dựng</option>
                                     </select>
                                 </div>
 

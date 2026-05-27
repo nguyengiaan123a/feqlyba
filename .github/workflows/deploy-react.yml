@@ -2,7 +2,7 @@ name: Deploy React Frontend to IIS
 
 on:
   push:
-    branches: [ "main" ] # 
+    branches: [ "main" ]
 
 jobs:
   build-and-deploy:
@@ -11,13 +11,16 @@ jobs:
     steps:
     - name: 📥 Tải source code mới nhất về Server
       uses: actions/checkout@v4
+      with:
+        clean: true # 🌟 Tự động dọn dẹp các file rác, file thừa từ lần chạy trước
 
-    - name: 🛠️ Cài đặt môi trường Node.js 20
+    # (Mẹo nhỏ: Bạn đang cấu hình node-version là '24' ở dưới, hãy đồng bộ lại comment cho chuẩn nhé)
+    <I name="🛠️ Cài đặt môi trường Node.js 24">
       uses: actions/setup-node@v4
       with:
         node-version: '24' 
 
-    - name: 📦 Cài đặt các thư viện (npm install)
+    - name: 📦 Cài đặt các thư viện (pnpm install)
       run: pnpm install --prefer-offline
 
     - name: ⚙️ Build source code React (Vite)
@@ -25,5 +28,13 @@ jobs:
 
     - name: 🚀 Copy đè file lên thư mục web IIS
       shell: powershell
-      # Vite xuất code ra thư mục dist, nên copy từ ./dist/*
       run: Copy-Item -Path ./dist/* -Destination "C:\inetpub\wwwroot\feqlyhsba" -Recurse -Force
+
+    # ================= BƯỚC THÊM MỚI ĐỂ DỌN DẸP SUY GIẢM DUNG LƯỢNG =================
+    - name: 🧹 Dọn dẹp thư mục sau khi deploy xong (Post Cleanup)
+      if: always() # Chạy bước này kể cả khi build thành công hay thất bại
+      shell: powershell
+      run: |
+        # Xóa thư mục node_modules và dist của project hiện tại để giải phóng dung lượng
+        if (Test-Path "./node_modules") { Remove-Item -Path "./node_modules" -Recurse -Force -ErrorAction SilentlyContinue }
+        if (Test-Path "./dist") { Remove-Item -Path "./dist" -Recurse -Force -ErrorAction SilentlyContinue }
