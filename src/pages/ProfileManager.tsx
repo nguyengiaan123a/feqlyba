@@ -239,7 +239,7 @@ const ProfileManager: React.FC = () => {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-800 placeholder:text-slate-400 pr-12"
-                        placeholder="Tối thiểu 6 ký tự 1 ký tự in hoa và 1 ký tự thường"
+                        placeholder="Tối thiểu 6 ký tự,1 ký tự in hoa và 1 ký hiệu đặc biệt"
                       />
                       <button
                         type="button"
