@@ -4,7 +4,7 @@ import { Edit3, Trash2, Search, Plus, ChevronLeft, ChevronRight, X, Paperclip, U
 import * as XLSX from 'xlsx';
 import { PATH_IMAGES } from '../types/PathImages';
 
-// Interface cho item DocumentRecord trả về từ API
+// Interface cho item DocumentRecord trả về từ API test
 interface DocumentRecordItem {
     id: number;
     maHoSo: string;
