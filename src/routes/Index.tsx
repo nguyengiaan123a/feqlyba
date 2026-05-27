@@ -12,6 +12,7 @@ import UserManager from '../pages/UserManager';
 import DepartmentRoomManager from '../pages/DepartmentRoomManager';
 import DocumentGroupManager from '../pages/DocumentGroupManager';
 import DocumentRecordManager from '../pages/DocumentRecordManager';
+import ProfileManager from '../pages/ProfileManager';
 
 
 export const router = createBrowserRouter([
@@ -62,6 +63,10 @@ export const router = createBrowserRouter([
       {
         path: 'quan-ly-ho-so',
         element: <DocumentRecordManager />,
+      },
+      {
+        path: 'trang-ca-nhan',
+        element: <ProfileManager />,
       },
 
 

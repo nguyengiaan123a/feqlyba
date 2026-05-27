@@ -78,7 +78,7 @@ const DocumentRecordManager: React.FC = () => {
     const [isAdmin, setIsAdmin] = useState<boolean>(false);
     const [filterDepartmentId, setFilterDepartmentId] = useState<string>(''); // Lọc theo phòng ban (admin)
     const [filterDocumentGroupId, setFilterDocumentGroupId] = useState<string>(''); // Lọc theo nhóm hồ sơ (tất cả user)
-    const [filterDepartment, setFilterDepartment] = useState<DepartmentRoom[]>([]); // Lọc theo phòng ban (admin)
+    const [filterDepartment, setFilterDepartment] = useState<DepartmentRoom[]>([]); // Lọc theo phòng ban (admin) 123
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [selectedRecords, setSelectedRecords] = useState<number[]>([]);

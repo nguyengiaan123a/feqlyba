@@ -20,7 +20,7 @@ const ProtectedRoute = () => {
     const checkAuthAndFetchMenus = async () => {
       try {
         const resUser = await apiClient.get("/api/user");
-        setUserName(resUser.data.username || "Admin");
+        setUserName(resUser.data.fullname || "Admin");
 
         const resMenu = await apiClient.get("/api/Authorization");
 
@@ -184,7 +184,14 @@ const ProtectedRoute = () => {
             <p className="text-xs text-slate-500">Chào mừng trở lại, {userName}!</p>
           </div>
 
-
+          <div className="flex items-center gap-4">
+            <Link to="/trang-ca-nhan" className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-blue-600 transition-colors" title="Hồ sơ cá nhân">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">
+                {userName ? userName.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <span className="text-sm font-medium hidden md:block">{userName}</span>
+            </Link>
+          </div>
         </header>
 
         <main className="flex-1 p-4 md:p-8 w-full overflow-y-auto">
