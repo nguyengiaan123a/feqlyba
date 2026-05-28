@@ -787,8 +787,8 @@ const DocumentRecordManager: React.FC = () => {
                                         value={formData.mucDoBaoMat}
                                         onChange={(e) => setFormData({ ...formData, mucDoBaoMat: e.target.value })}
                                     >
-                                        <option value="Thường">Thường</option>
-                                        <option value="Mật">Mật</option>
+                                        <option value="Công khai">Công khai</option>
+                                        <option value="Nội bộ">Nội bộ</option>
                                         <option value="Tối mật">Tối mật</option>
                                     </select>
                                 </div>
