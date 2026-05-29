@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: [self-hosted, WIN-HRB0NEE9SOL]
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
     - name: 📥 Tải source code mới nhất về Server

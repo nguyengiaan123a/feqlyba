@@ -44,7 +44,7 @@ const CTMenuManager = () => {
     fetchData();
   }, [pagination.currentPage, searchTerm]);
 
-  // 2. Thêm mới hoặc Cập nhật (Theo Swagger: /api/CTmenu) 
+  // 2. Thêm mới hoặc Cập nhật (Theo Swagger: /api/CTmenu)  saASDA
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
