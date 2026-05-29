@@ -24,6 +24,7 @@ interface DocumentRecordItem {
     tenNhomHoSo: string;
     createdDate: string;
     loaiHoSo?: string;
+    soLan: number | null;
 }
 
 // Interface cho DocumentGroup (phòng ban)
@@ -48,6 +49,7 @@ interface DocumentRecordFormData {
     id_DocumentGroup: number | string;
     id_DepartmentRoom?: string;
     loaiHoSo?: string;
+    soLan: number | null;
 }
 // interface DepartmentRoom
 
@@ -129,6 +131,7 @@ const DocumentRecordManager: React.FC = () => {
                 'Mã Hồ Sơ': item.maHoSo || '',
                 'Tên Hồ Sơ / Tài Liệu': item.title || '',
                 'Loại Hồ Sơ': item.loaiHoSo || '',
+                'Số Lần': item.soLan !== null ? item.soLan : '',
                 'Nhóm Hồ Sơ': item.tenNhomHoSo || '',
                 'Phòng Ban': item.tenPhongBan || item.id_DepartmentRoom || '',
                 'Năm Hiệu Lực': item.namHieuLuc || '',
@@ -175,7 +178,8 @@ const DocumentRecordManager: React.FC = () => {
         ghiChu: '',
         id_DocumentGroup: '',
         id_DepartmentRoom: '',
-        loaiHoSo: ''
+        loaiHoSo: '',
+        soLan: null
     };
     const [formData, setFormData] = useState<DocumentRecordFormData>(initialFormState);
 
@@ -276,8 +280,10 @@ const DocumentRecordManager: React.FC = () => {
 
             if (editingId) {
                 await apiClient.put(`/api/DocumentRecord/${editingId}`, payload);
+                alert("Cập nhật hồ sơ thành công!");
             } else {
                 await apiClient.post('/api/DocumentRecord', payload);
+                alert("Thêm hồ sơ thành công!");
             }
             setIsModalOpen(false);
             resetForm();
@@ -320,7 +326,8 @@ const DocumentRecordManager: React.FC = () => {
             ghiChu: item.ghiChu || '',
             id_DocumentGroup: item.id_DocumentGroup || '',
             id_DepartmentRoom: item.id_DepartmentRoom || '',
-            loaiHoSo: item.loaiHoSo || ''
+            loaiHoSo: item.loaiHoSo || '',
+            soLan: item.soLan !== undefined ? item.soLan : null
         });
         setIsModalOpen(true);
     };
@@ -522,6 +529,7 @@ const DocumentRecordManager: React.FC = () => {
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600 w-12 text-center">STT</th>
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600">Hồ sơ</th>
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600">Loại hồ sơ</th>
+                            <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600 text-center">Số lần</th>
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600 text-center">Năm HL</th>
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600 text-center">Lưu trữ</th>
                             <th className="px-4 py-3 font-bold text-xs uppercase text-gray-600 text-center">Hết hạn</th>
@@ -573,6 +581,9 @@ const DocumentRecordManager: React.FC = () => {
                                         ) : (
                                             <span className="text-gray-400">—</span>
                                         )}
+                                    </td>
+                                    <td className="px-4 py-3 text-center text-sm text-gray-600 font-medium">
+                                        {item.soLan !== null ? item.soLan : '—'}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-gray-600 font-medium">
                                         {item.namHieuLuc || '—'}
@@ -716,6 +727,17 @@ const DocumentRecordManager: React.FC = () => {
                                         value={formData.loaiHoSo || ''}
                                         onChange={(e) => setFormData({ ...formData, loaiHoSo: e.target.value })}
                                         placeholder="VD: Scan, Hồ sơ giấy ...(có thể để trống)"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Số lần</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
+                                        value={formData.soLan === null ? '' : formData.soLan}
+                                        onChange={(e) => setFormData({ ...formData, soLan: e.target.value ? Number(e.target.value) : null })}
+                                        placeholder="Nhập số lần..."
                                     />
                                 </div>
 

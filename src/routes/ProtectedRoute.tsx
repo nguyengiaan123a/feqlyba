@@ -3,6 +3,7 @@ import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import apiClient from "../services/api";
 import Loading from "../Component/Loading";
 import logoBv from "../Asset/Images/Logobv.png";
+import { Menu, LogOut, LayoutDashboard, Settings, ChevronDown, ChevronRight } from "lucide-react";
 
 const ProtectedRoute = () => {
   const [isAuth, setIsAuth] = useState<boolean | null>(null);
@@ -13,6 +14,9 @@ const ProtectedRoute = () => {
 
   // State quản lý việc Đóng/Mở của các danh mục cha
   const [expandedCategories, setExpandedCategories] = useState<Record<number, boolean>>({});
+
+  // State quản lý sidebar thu gọn
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
 
   const location = useLocation();
 
@@ -92,18 +96,18 @@ const ProtectedRoute = () => {
     <div className="flex min-h-screen bg-[#f8fafc]">
 
       {/* --- SIDEBAR --- */}
-      <aside className="w-64 bg-white shadow-xl fixed h-full z-20 flex flex-col">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-center bg-slate-50/30 mb-2">
+      <aside className={`bg-white shadow-xl fixed h-full z-20 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
+        <div className="p-5 border-b border-slate-100 flex items-center justify-center bg-slate-50/30 mb-2 h-20">
           <Link to="/trang-chu" className="flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-[1.03] w-full">
-            <img src={logoBv} alt="Bệnh Viện Đa Khoa Mỹ Phước" className="h-12 w-auto object-contain" />
+            <img src={logoBv} alt="Bệnh Viện Đa Khoa Mỹ Phước" className={`${isSidebarOpen ? 'h-12' : 'h-8'} w-auto object-contain transition-all duration-300`} />
           </Link>
         </div>
 
-        <nav className="mt-2 flex flex-col gap-1 px-4 flex-1 overflow-y-auto pb-4">
-          <p className="text-[10px] font-bold text-black uppercase px-4 mb-2 tracking-widest">Main Menu</p>
-          <Link to="/trang-chu" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium text-sm ${activeClass('/trang-chu')}`}>
-            <span className="text-lg">📊</span>
-            <span>Dashboard</span>
+        <nav className="mt-2 flex flex-col gap-1 px-3 flex-1 overflow-y-auto pb-4 custom-scrollbar">
+          {isSidebarOpen && <p className="text-[10px] font-bold text-black uppercase px-2 mb-2 tracking-widest truncate">Main Menu</p>}
+          <Link to="/trang-chu" className={`flex items-center ${isSidebarOpen ? 'gap-3 px-4' : 'justify-center px-0'} py-3 rounded-xl transition-all duration-200 font-medium text-sm ${activeClass('/trang-chu')}`} title={!isSidebarOpen ? "Dashboard" : ""}>
+            <LayoutDashboard className="w-5 h-5 shrink-0" />
+            {isSidebarOpen && <span className="truncate">Dashboard</span>}
           </Link>
 
           {/* RENDER MENU ĐỘNG TỪ API */}
@@ -115,26 +119,33 @@ const ProtectedRoute = () => {
 
                 {/* Khu vực tiêu đề biến thành Nút bấm */}
                 <div
-                  className="flex items-center justify-between px-4 py-2 mt-2 cursor-pointer group hover:bg-slate-50 rounded-xl transition-colors"
-                  onClick={() => toggleCategory(catIndex)}
+                  className={`flex items-center ${isSidebarOpen ? 'justify-between px-4' : 'justify-center px-0'} py-3 mt-1 cursor-pointer group hover:bg-slate-50 rounded-xl transition-colors`}
+                  onClick={() => {
+                    if (!isSidebarOpen) setIsSidebarOpen(true);
+                    toggleCategory(catIndex);
+                  }}
+                  title={!isSidebarOpen ? category.title_ctmenu : ""}
                 >
-                  {/* Đổi text-slate-400 thành text-black */}
-                  <p className="text-[10px] font-bold text-black uppercase tracking-widest flex items-center gap-2 group-hover:text-blue-500 transition-colors">
-                    {category.thumnail && category.thumnail.startsWith("http") && (
-                      <img src={category.thumnail} alt="cat-icon" className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  <p className="text-[10px] font-bold text-black uppercase tracking-widest flex items-center gap-2 group-hover:text-blue-500 transition-colors truncate">
+                    {category.thumnail && category.thumnail.startsWith("http") ? (
+                      <img src={category.thumnail} alt="cat-icon" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />
+                    ) : (
+                      <span className="w-5 h-5 flex items-center justify-center shrink-0">📁</span>
                     )}
-                    {category.title_ctmenu}
+                    {isSidebarOpen && <span className="truncate">{category.title_ctmenu}</span>}
                   </p>
 
                   {/* Icon mũi tên thể hiện đóng mở */}
-                  <span className="text-black text-xs transition-transform duration-200">
-                    {isExpanded ? "▼" : "▶"}
-                  </span>
+                  {isSidebarOpen && (
+                    <span className="text-black transition-transform duration-200 shrink-0">
+                      {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </span>
+                  )}
                 </div>
 
                 {/* Render menu con có điều kiện */}
-                {isExpanded && (
-                  <div className="flex flex-col gap-1 ml-2 border-l-2 border-slate-200 pl-2">
+                {isExpanded && isSidebarOpen && (
+                  <div className="flex flex-col gap-1 ml-4 border-l-2 border-slate-100 pl-2 mt-1">
                     {category.menus.map((menu: any, mIndex: number) => {
                       const linkUrl = (menu.url === "/#" || menu.url === "#") ? "#" : menu.url;
 
@@ -145,11 +156,11 @@ const ProtectedRoute = () => {
                           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm ${activeClass(linkUrl)}`}
                         >
                           {menu.thumnail && menu.thumnail.startsWith("http") ? (
-                            <img src={menu.thumnail} alt="menu-icon" className="w-4 h-4" />
+                            <img src={menu.thumnail} alt="menu-icon" className="w-4 h-4 shrink-0" />
                           ) : (
-                            <span className="text-base">⚙️</span>
+                            <Settings className="w-4 h-4 shrink-0 opacity-70" />
                           )}
-                          <span>{menu.title_menu}</span>
+                          <span className="truncate">{menu.title_menu}</span>
                         </Link>
                       );
                     })}
@@ -165,23 +176,32 @@ const ProtectedRoute = () => {
         <div className="p-4 border-t border-slate-200">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-rose-500 hover:bg-rose-50 transition-all font-medium text-sm"
+            className={`w-full flex items-center ${isSidebarOpen ? 'gap-3 px-4' : 'justify-center px-0'} py-3 rounded-xl text-rose-500 hover:bg-rose-50 transition-all font-medium text-sm`}
+            title={!isSidebarOpen ? "Đăng xuất" : ""}
           >
-            <span className="text-lg">🚪</span>
-            <span>Đăng xuất</span>
+            <LogOut className="w-5 h-5 shrink-0" />
+            {isSidebarOpen && <span className="truncate">Đăng xuất</span>}
           </button>
         </div>
       </aside>
 
       {/* --- NỘI DUNG CHÍNH --- */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <header className="h-20 flex items-center justify-between bg-white/80 backdrop-blur-md px-8 border-b border-slate-200 shrink-0">
-          <div className="flex flex-col">
-            {/* Đổi thành text-black */}
-            <h1 className="text-black font-bold text-base">
-              HỆ THỐNG QUẢN LÝ LƯU TRỮ HỒ SƠ MPH
-            </h1>
-            <p className="text-xs text-slate-500">Chào mừng trở lại, {userName}!</p>
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
+        <header className="h-20 flex items-center justify-between bg-white/80 backdrop-blur-md px-4 md:px-8 border-b border-slate-200 shrink-0 sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="flex flex-col hidden sm:flex">
+              {/* Đổi thành text-black */}
+              <h1 className="text-black font-bold text-base">
+                HỆ THỐNG QUẢN LÝ LƯU TRỮ HỒ SƠ MPH
+              </h1>
+              <p className="text-xs text-slate-500">Chào mừng trở lại, {userName}!</p>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
